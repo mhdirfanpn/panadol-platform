@@ -8,6 +8,13 @@ import com.example.booking.enums.UserRole;
 import com.example.booking.enums.UserStatus;
 import com.example.booking.service.SuperAdminService;
 import com.example.booking.service.SuperAdminService.DashboardStats;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -21,6 +28,7 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/super-admin")
+@Tag(name = "Super Admin", description = "Super Admin management APIs for user and doctor administration")
 public class SuperAdminController {
 
     private final SuperAdminService superAdminService;
@@ -29,44 +37,52 @@ public class SuperAdminController {
         this.superAdminService = superAdminService;
     }
 
-    /**
-     * Create a new user (Admin, Staff, Patient)
-     * POST /api/super-admin/users
-     */
+    @Operation(summary = "Create a new user", description = "Create a new user with roles: ADMIN, STAFF, or PATIENT")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "User created successfully",
+                    content = @Content(schema = @Schema(implementation = UserResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "409", description = "User already exists")
+    })
     @PostMapping("/users")
     public ResponseEntity<UserResponse> createUser(
             @Valid @RequestBody UserRequest userRequest,
+            @Parameter(description = "Super Admin User ID", example = "1")
             @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long superAdminId) {
         UserResponse response = superAdminService.createUser(userRequest, superAdminId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    /**
-     * Onboard a new doctor
-     * POST /api/super-admin/doctors
-     */
+    @Operation(summary = "Onboard a new doctor", description = "Create a new doctor with medical specialization and credentials")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "201", description = "Doctor onboarded successfully",
+                    content = @Content(schema = @Schema(implementation = DoctorResponse.class))),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "409", description = "Doctor already exists")
+    })
     @PostMapping("/doctors")
     public ResponseEntity<DoctorResponse> onboardDoctor(
             @Valid @RequestBody DoctorRequest doctorRequest,
+            @Parameter(description = "Super Admin User ID", example = "1")
             @RequestHeader(value = "X-User-Id", required = false, defaultValue = "1") Long superAdminId) {
         DoctorResponse response = superAdminService.onboardDoctor(doctorRequest, superAdminId);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    /**
-     * Get all users
-     * GET /api/super-admin/users
-     */
+    @Operation(summary = "Get all users", description = "Retrieve a list of all users in the system")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved users list")
+    })
     @GetMapping("/users")
     public ResponseEntity<List<UserResponse>> getAllUsers() {
         List<UserResponse> users = superAdminService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
-    /**
-     * Get all doctors
-     * GET /api/super-admin/doctors
-     */
+    @Operation(summary = "Get all doctors", description = "Retrieve a list of all doctors in the system")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved doctors list")
+    })
     @GetMapping("/doctors")
     public ResponseEntity<List<DoctorResponse>> getAllDoctors() {
         List<DoctorResponse> doctors = superAdminService.getAllDoctors();
